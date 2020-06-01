@@ -479,51 +479,57 @@ void test_mode_down (void)
 }
 }
 
-/********************************************************
- * Round Robin Scheduler used in Main Function
- ********************************************************/
-int main (void)
+void test_mode (void)
 {
-    uint16_t data; //Setting variables to use in the displayUpdate functions
-    uint16_t second_data;
-    char* data_name;
+    if(test_flag==1){
+        uint16_t data; //Setting variables to use in the displayUpdate2 function
+        uint16_t second_data;
+        char* data_name;
+        OLEDStringDraw ("Testing Mode  ", 0, 0);
 
-    initClock ();
-    initAccl ();
-    initDisplay ();
-    int i = 0; //Counter used to delay while loop
-    initButtons ();
-
-
-
-
-
-    //While loop to display data depending on the change state function
-    while (1)
-    {
-
-        calculate_norm();  //Calling tasks that need to be checked each time
-        change_state_steps();
-        change_state_distance();
-        change_state_measurements();
-        reset_counter();
-        test_flag_set();
-        test_mode_up();
-        test_mode_down();
+        if (stepcount_flag == 1) { //Steps Display
+            OLEDStringDraw("          ", 0, 2);
+            data = step_counter;
+            data_name = "Steps: ";
+            displayUpdate (data_name, data, 2);
+            OLEDStringDraw("            ", 0, 3);
 
 
+        } if(distance_flag == 1) { //Distance Display
+            OLEDStringDraw("Distance:  ", 0, 2);
+            if(kilometre_flag == 1) { //Kilometres
+                data = kilometres;
+                second_data = metres;
+                displayUpdate2 (data, ".", second_data, "km", 3);
 
-        SysCtlDelay (SysCtlClockGet () / 100);
-        if (i == 8) { //Counting to 8 allows averaging of the accelerometer data and also stabilizes the OLED display
-            get_steps();
-            get_distance();
-            if(test_flag == 0){ // Tasks to be executed while not in test mode
-                OLEDStringDraw ("Iso FitBit 2.0", 0, 0);
-          if (stepcount_flag == 1) { //Display for steps
-              data = step_counter;
-              data_name = "Steps: ";
-              displayUpdate (data_name, data, 2);
-              OLEDStringDraw("            ", 0, 3);
+                }  else if (mile_flag == 1) { //Miles
+                    data = miles;
+                    second_data = milimiles;
+                    displayUpdate2 (data, ".", second_data, "mi", 3);
+
+                }
+
+
+
+
+        }
+
+        }
+}
+
+void normal_mode (void)
+{
+   uint16_t data; //Setting variables to use in the displayUpdate function
+   uint16_t second_data;
+   char* data_name;
+
+   if(test_flag == 0){ // Tasks to be executed while not in test mode
+        OLEDStringDraw ("Iso FitBit 2.0", 0, 0);
+        if (stepcount_flag == 1) { //Display for steps
+            data = step_counter;
+            data_name = "Steps: ";
+            displayUpdate (data_name, data, 2);
+            OLEDStringDraw("            ", 0, 3);
 
 
         } if(distance_flag == 1) { //Display for distance
@@ -541,38 +547,44 @@ int main (void)
             }
 
 
-       }
-            } else if(test_flag == 1){ //Tasks to be executed while in test mode
-                OLEDStringDraw ("Testing Mode  ", 0, 0);
-                if (stepcount_flag == 1) {
-                    OLEDStringDraw("          ", 0, 2);
-                              data = step_counter;
-                              data_name = "Steps: ";
-                              displayUpdate (data_name, data, 2);
-                              OLEDStringDraw("            ", 0, 3);
+        }
+   }
+}
+
+/********************************************************
+ * Round Robin Scheduler used in Main Function
+ ********************************************************/
+int main (void)
+{
 
 
-                        } if(distance_flag == 1) { //Distance Display
-                            OLEDStringDraw("Distance:  ", 0, 2);
-                            if(kilometre_flag == 1) { //Kilometres
-                                data = kilometres;
-                                second_data = metres;
-                                displayUpdate2 (data, ".", second_data, "km", 3);
+    initClock ();
+    initAccl ();
+    initDisplay ();
+    int i = 0; //Counter used to delay while loop
+    initButtons ();
 
-                            }  else if (mile_flag == 1) { //Miles
-                                data = miles;
-                                second_data = milimiles;
-                                displayUpdate2 (data, ".", second_data, "mi", 3);
+    //While loop to display data depending on the change state function
+    while (1)
+    {
+        calculate_norm();  //Calling tasks that need to be checked each time
+        change_state_steps();
+        change_state_distance();
+        change_state_measurements();
+        reset_counter();
+        test_flag_set();
+        test_mode_up();
+        test_mode_down();
 
-                            }
+        SysCtlDelay (SysCtlClockGet () / 100);
+        if (i == 8) { //Counting to 8 allows averaging of the accelerometer data and also stabilizes the OLED display
+            get_steps();
+            get_distance();
+            normal_mode();
+            test_mode();
 
-
-
-
-            }
-            }
-        i = 0;
-      }
-      i++;
+            i = 0;
+        }
+        i++;
     }
 }
